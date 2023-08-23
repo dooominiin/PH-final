@@ -13,12 +13,13 @@ import convolutionfilter as cv
 from machine import Pin, Timer, ADC
 
 class EC_Regler():
-    def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, EC_Sensor_pin):
+    def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, EC_Sensor_pin,Mischzeit):
         self.Wasservolumen = Wasservolumen
         self.Düngerkonzentration = Düngerkonztentration
-        self.Mischpumpe = Mischpumpe
-        self.Düngerpumpe = Düngerpumpe
+        self.Mischpumpe = Pin(Mischpumpe,Pin.OUT)
+        self.Düngerpumpe = Pumpe.Pumpe(Düngerpumpe)
         self.EC_Sensor = EC_Sensor(EC_Sensor_pin)
+        self.Mischzeit = Mischzeit
         self.Sollwert = 0
         self.Istwert = 0
         self.error = 0
@@ -29,12 +30,16 @@ class EC_Regler():
 
 
     def run_regler(self,Sollwert):
+        zähler = 0
         self.Sollwert = Sollwert
         while not self.Sollwert_erreicht:
+            zähler += 1
+            print(zähler)
             self.Mischpumpe.on()
             value = (self.kp * self.error + self.ki * self.error_integral) * self.Wasservolumen/self.Düngerkonzentration
+            print("dünger : {}ml, error: {}".format(value,self.error))
             self.Düngerpumpe.shot_ml(value)
-            time.sleep(60)
+            time.sleep(self.Mischzeit)
             try:
                 self.Istwert = self.EC_Sensor.get_value()
             except Exception as e:

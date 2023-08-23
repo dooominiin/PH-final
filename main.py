@@ -13,7 +13,7 @@ import duengermischung as dm
 from ds1307 import DS1307
 from EC_PH_Control import EC_pH, EC_Regler
 
-ec_regler = EC_Regler(Wasservolumen=8, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28)
+ec_regler = EC_Regler(Wasservolumen=8, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28, Mischzeit=1)
 ec_regler.run_regler(1400)
 
 
