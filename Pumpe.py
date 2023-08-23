@@ -19,6 +19,9 @@ class Pumpe(object):
         self.isfinished = 0
         self.tim.init(mode = Timer.ONE_SHOT, period=int(value*1000),callback=off)
 
+    def shot_ml(self,value):
+        self.shot(value/7.35*10)
+
 
     def deinit(self):
         self.pumpe.duty_u16(0)
