@@ -12,6 +12,41 @@ import duengermischung
 import convolutionfilter as cv
 from machine import Pin, Timer, ADC
 
+class EC_Regler():
+    def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, EC_Sensor_pin):
+        self.Wasservolumen = Wasservolumen
+        self.Düngerkonzentration = Düngerkonztentration
+        self.Mischpumpe = Mischpumpe
+        self.Düngerpumpe = Düngerpumpe
+        self.EC_Sensor = EC_Sensor(EC_Sensor_pin)
+        self.Sollwert = 0
+        self.Istwert = 0
+        self.error = 0
+        self.error_integral = 0
+        self.kp = 0.8
+        self.ki = 0.1
+        self.Sollwert_erreicht = False
+
+
+    def run_regler(self,Sollwert):
+        self.Sollwert = Sollwert
+        while not self.Sollwert_erreicht:
+            self.Mischpumpe.on()
+            value = (self.kp * self.error + self.ki * self.error_integral) * self.Wasservolumen/self.Düngerkonzentration
+            self.Düngerpumpe.shot_ml(value)
+            time.sleep(60)
+            try:
+                self.Istwert = self.EC_Sensor.get_value()
+            except Exception as e:
+                print(e)
+            self.error_integral += self.error
+            self.error = self.Sollwert-self.Istwert
+            self.Sollwert_erreicht = self.error<0
+        self.error_integral = 0
+        self.error = 0
+        self.Sollwert_erreicht = False
+        self.Mischpumpe.off()
+        
 
 class Tank_neu_fuellen:
     ''' Diese Klasse soll genutzt werden, um den Tank einmal komplett neu zu füllen. Starten mit Tank_neu_fuellen.start(). Ist fertig, wenn Tank_neu_fuellen.is_finished() auf true geht.''' 
@@ -64,8 +99,42 @@ class Tank_neu_fuellen:
 # 
 
 
+class EC_Sensor():
+    def __init__(self,pin):
+        self.sensor = ADC(Pin(pin))
+        self.filter = cv.convolutionfilter()
 
-
+    def get_value(self):
+        def lookup(value, lookup_table):
+            # Finde den Index des nächsten kleineren Werts in der Lookup-Tabelle
+            index = 0
+            while index < len(lookup_table) - 2 and value > lookup_table[index][0]:
+                index += 1
+            # Extrahiere die Werte der nächsten beiden Punkte
+            x0, y0 = lookup_table[index]
+            if index > len(lookup_table)-1:
+                index = len(lookup_table)-2
+            x1, y1 = lookup_table[index + 1]
+            # Lineare Interpolation zwischen den beiden Punkten
+            interpolated_value = y0 + (y1 - y0) * (value - x0) / (x1 - x0)
+            return interpolated_value
+    
+        value = self.filter.filterSignal(self.sensor.read_u16())
+        lookup_table = [
+            (0,4.21197388614424462),
+            (5400000,202.058449644594873),
+            (10800000,398.271812926794325),
+            (16200000,591.12460920663932),
+            (21600000,778.940186344151243),
+            (27000000,960.380591160864469),
+            (32400000,1134.24639678983294),
+            (37800000,1299.33859080336583),
+            (43200000,1496.94847074355403),
+            (48600000,1994.91364226592555)
+            ]
+        value = lookup(value*1000,lookup_table)
+        return value
+        
 class EC_pH:
     '''regelung zur anpassung des EC WErtes und des pH Wertes. simple State Machine'''
     

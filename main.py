@@ -11,10 +11,10 @@ import convolutionfilter as filt
 import Pumpe
 import duengermischung as dm
 from ds1307 import DS1307
-from EC_PH_Control import EC_pH
+from EC_PH_Control import EC_pH, EC_Regler
 
-
-
+ec_regler = EC_Regler(Wasservolumen=8, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28)
+ec_regler.run_regler(1400)
 
 
 
@@ -33,14 +33,3 @@ except Exception as e:
     print("Pumpen Treiber Test fehlgeschlagen")
     print(e)
 
-# AC PWM Test
-try:
-    print("PWM gestartet!")
-    pwm = PWM(Pin(3))
-    pwm.freq(8)
-    print(pwm)
-    pwm.duty_u16(int(0.8*65535))
-    time.sleep(1)
-except Exception as e:
-    print("AC PWM Test fehlgeschlagen")
-    print(e)
