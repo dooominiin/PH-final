@@ -19,7 +19,7 @@ try:
     sensor_EC = ADC(Pin(28))
     filter_EC = cv.convolutionfilter()
     filter_EC.setValue(sensor_EC.read_u16())
-    for i in range(10):
+    for i in range(100):
         value = EC_pH.convert_EC(EC_pH.sensor_EC,EC_pH.filter_EC)
         time.sleep(0.1)
         print("EC : {}".format(value))
@@ -78,7 +78,7 @@ try:
         pumpe.append(Pumpe.Pumpe(pin))
     for Pumpe,pin in zip(pumpe,pins):
         print(pin)
-        Pumpe.shot(5)
+        Pumpe.shot(0)
         time.sleep(0.2)
     print("Pumpen Treiber Test erfolgreich\n")
 except Exception as e:
@@ -91,8 +91,10 @@ try:
     pwm = PWM(Pin(3))
     pwm.freq(8)
     print(pwm)
-    pwm.duty_u16(int(0.1*65535))
-    time.sleep(100)
+    pwm.duty_u16(int(0.5*65535))
+    time.sleep(1)
+    pwm.duty_u16(int(0))
+    
 except Exception as e:
     print("AC PWM Test fehlgeschlagen")
     print(e)
@@ -106,7 +108,7 @@ try:
         relay.append(Pin(pin,Pin.OUT))
     for Relay,pin in zip(relay,pins):
         print("Pin Nr: {}".format(pin))
-        for i in range(8):
+        for i in range(1):
             Relay.on() # Ausgang auf HIGH setzen
             time.sleep(0.3)  # 1 Sekunde warten
             Relay.off()  # Ausgang auf LOW setzen
@@ -115,6 +117,30 @@ except Exception as e:
     print("AC Relays Test fehlgeschlagen")
     print(e)
     
+
+
+# EC kalibrierung
+try:
+    ist = []
+    sensor = []
+    relay[4].on()
+    time.sleep(30)
+    relay[4].off()
+    for i in range(20):
+        val = sensor_EC.read_u16()   
+         
+        sensor.append(val)
+        ist.append(int(input("val: {}   Drücke Enter, um fortzufahren...".format(val))))
+        print(ist[i])
+        relay[4].on()
+        pumpe[4].shot_ml(5)
+        time.sleep(30)
+        relay[4].off()
+    print(ist)
+    print(sensor)
+except Exception as e:
+    print(e)
+       
 
 # PH messung Test
 try:

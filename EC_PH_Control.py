@@ -25,7 +25,7 @@ class EC_Regler():
         self.error = 0
         self.error_integral = 0
         self.kp = 0.8
-        self.ki = 0.1
+        self.ki = 0.05
         self.Sollwert_erreicht = False
 
 
@@ -34,16 +34,31 @@ class EC_Regler():
         self.Sollwert = Sollwert
         while not self.Sollwert_erreicht:
             zähler += 1
-            print(zähler)
+            print("zähler :{}".format(zähler))
             self.Mischpumpe.on()
-            value = (self.kp * self.error + self.ki * self.error_integral) * self.Wasservolumen/self.Düngerkonzentration
+            value = (self.kp * self.error + self.ki * self.error_integral) * self.Wasservolumen/self.Düngerkonzentration/1400
             print("dünger : {}ml, error: {}".format(value,self.error))
             self.Düngerpumpe.shot_ml(value)
             time.sleep(self.Mischzeit)
             try:
-                self.Istwert = self.EC_Sensor.get_value()
+                self.Mischpumpe.off()
+                time.sleep(1)            
+                k1 = self.EC_Sensor.get_value()
+                time.sleep(0.5)            
+                k2 = self.EC_Sensor.get_value()
+                time.sleep(0.5)            
+                k3 = self.EC_Sensor.get_value()
+                self.Mischpumpe.on()
+
+                self.Istwert = (k1+k2+k3)/3
+                if k1==k2:
+                    if k2==k3:
+                        self.Istwert = 9999
+                        raise FreezeException("Der Sensor Reagiert nicht mehr")           
             except Exception as e:
                 print(e)
+            print("Istwert: {} uS".format(self.Istwert))
+
             self.error_integral += self.error
             self.error = self.Sollwert-self.Istwert
             self.Sollwert_erreicht = self.error<0
@@ -107,7 +122,6 @@ class Tank_neu_fuellen:
 class EC_Sensor():
     def __init__(self,pin):
         self.sensor = ADC(Pin(pin))
-        self.filter = cv.convolutionfilter()
 
     def get_value(self):
         def lookup(value, lookup_table):
@@ -123,21 +137,39 @@ class EC_Sensor():
             # Lineare Interpolation zwischen den beiden Punkten
             interpolated_value = y0 + (y1 - y0) * (value - x0) / (x1 - x0)
             return interpolated_value
-    
-        value = self.filter.filterSignal(self.sensor.read_u16())
+        value = self.sensor.read_u16()
         lookup_table = [
-            (0,4.21197388614424462),
-            (5400000,202.058449644594873),
-            (10800000,398.271812926794325),
-            (16200000,591.12460920663932),
-            (21600000,778.940186344151243),
-            (27000000,960.380591160864469),
-            (32400000,1134.24639678983294),
-            (37800000,1299.33859080336583),
-            (43200000,1496.94847074355403),
-            (48600000,1994.91364226592555)
+            (0.00000000000000000,0),
+            (4874.44498922495495,200),
+            (10135.6120464669602,400),
+            (15454.7941955584974,600),
+            (20858.1918005606531,800),
+            (26331.5818066974098,1000),
+            (31790.3744671429922,1200),
+            (37049.6700698092027,1400),
+            (41794.315664132766,1600),
+            (45548.9617878626232,1800),
+            (47648.1191938473567,2000)
             ]
-        value = lookup(value*1000,lookup_table)
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        value = lookup(value,lookup_table)
         return value
         
 class EC_pH:
@@ -263,18 +295,19 @@ class EC_pH:
     
         value = filter.filterSignal(pin.read_u16())
         lookup_table = [
-            (0,4.21197388614424462),
-            (5400000,202.058449644594873),
-            (10800000,398.271812926794325),
-            (16200000,591.12460920663932),
-            (21600000,778.940186344151243),
-            (27000000,960.380591160864469),
-            (32400000,1134.24639678983294),
-            (37800000,1299.33859080336583),
-            (43200000,1496.94847074355403),
-            (48600000,1994.91364226592555)
+            (0.00000000000000000,0),
+            (4874.44498922495495,200),
+            (10135.6120464669602,400),
+            (15454.7941955584974,600),
+            (20858.1918005606531,800),
+            (26331.5818066974098,1000),
+            (31790.3744671429922,1200),
+            (37049.6700698092027,1400),
+            (41794.315664132766,1600),
+            (45548.9617878626232,1800),
+            (47648.1191938473567,2000)
             ]
-        value = lookup(value*1000,lookup_table)
+        value = lookup(value,lookup_table)
         return value
     
     def stop(timer):
@@ -288,7 +321,8 @@ class EC_pH:
         return ['duengen :', EC_pH.duengen]
     
 
-
+class FreezeException(Exception):
+    pass
 
 #test
 # a = EC_pH()
