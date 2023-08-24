@@ -10,7 +10,6 @@ import convolutionfilter as filt
 import Pumpe
 import duengermischung as dm
 from ds1307 import DS1307
-from EC_PH_Control import EC_pH
 
 print("Testscript gestartet")
 
