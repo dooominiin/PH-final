@@ -8,9 +8,8 @@ Created on Fri Apr  7 22:55:13 2023
 
 import time
 import Pumpe
-import duengermischung
-import convolutionfilter as cv
 from machine import Pin, Timer, ADC
+import machine
 
 class EC_Regler():
     def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, EC_Sensor_pin,Mischzeit):
@@ -28,13 +27,16 @@ class EC_Regler():
         self.ki = 0.05
         self.Sollwert_erreicht = False
 
+    def set_k(self,kp,ki):
+        self.kp = kp
+        self.ki = ki
 
     def run_regler(self,Sollwert):
         zähler = 0
         self.Sollwert = Sollwert
         while not self.Sollwert_erreicht:
             zähler += 1
-            print("zähler :{}".format(zähler))
+            print("Zähler :{}".format(zähler))
             self.Mischpumpe.on()
             value = (self.kp * self.error + self.ki * self.error_integral) * self.Wasservolumen/self.Düngerkonzentration/1400
             print("dünger : {}ml, error: {}".format(value,self.error))
@@ -51,282 +53,86 @@ class EC_Regler():
                 self.Mischpumpe.on()
 
                 self.Istwert = (k1+k2+k3)/3
-                if k1==k2:
-                    if k2==k3:
-                        self.Istwert = 9999
-                        raise FreezeException("Der Sensor Reagiert nicht mehr")           
             except Exception as e:
                 print(e)
             print("Istwert: {} uS".format(self.Istwert))
 
             self.error_integral += self.error
             self.error = self.Sollwert-self.Istwert
-            self.Sollwert_erreicht = self.error<0
+            self.Sollwert_erreicht = self.error<0 or zähler>=8
+
         self.error_integral = 0
         self.error = 0
         self.Sollwert_erreicht = False
         self.Mischpumpe.off()
         
 
-class Tank_neu_fuellen:
-    ''' Diese Klasse soll genutzt werden, um den Tank einmal komplett neu zu füllen. Starten mit Tank_neu_fuellen.start(). Ist fertig, wenn Tank_neu_fuellen.is_finished() auf true geht.''' 
-    
-    leerzeit = 1000#1000*60*10  # ms
-    fuellzeit = 1000#24*60*60*1000/180 * 100 # ms
-    timer_leeren = Timer()
-    timer_fuellen = Timer()
-    timer_check = Timer()
-    fuellstand = Pin(6, Pin.IN)
-    RO_ventil = Pin(7,Pin.OUT,value=0)
-    Entleerpumpe = Pin(21,Pin.OUT,value=0)#AC1
-    finished = 0
-
-        
-    def is_finished(self):
-        return Tank_neu_fuellen.finished
-    
-    def start(self):
-        Tank_neu_fuellen.finished = 0
-        Tank_neu_fuellen.Entleerpumpe.on()
-        Tank_neu_fuellen.timer_leeren.init(mode=Timer.ONE_SHOT, period=Tank_neu_fuellen.leerzeit, callback=Tank_neu_fuellen.fuellen)
-        
-    def fuellen(timer):
-        Tank_neu_fuellen.Entleerpumpe.off()
-        Tank_neu_fuellen.RO_ventil.on()
-        Tank_neu_fuellen.timer_fuellen.init(mode=Timer.ONE_SHOT, period=Tank_neu_fuellen.fuellzeit, callback=Tank_neu_fuellen.finish)
-        Tank_neu_fuellen.timer_check.init(period=1000, callback=Tank_neu_fuellen.check_if_full)
-
-        
-    def finish(timer):
-        Tank_neu_fuellen.RO_ventil.off()
-        Tank_neu_fuellen.finished = 1
-    
-    
-    def check_if_full(timer):
-        if Tank_neu_fuellen.fuellstand.value():
-            Tank_neu_fuellen.timer_fuellen.deinit()
-            Tank_neu_fuellen.RO_ventil.off()
-            Tank_neu_fuellen.finished = 1
-
-    def mystates(self):
-        return ['fuellstand: ',Tank_neu_fuellen.fuellstand.value(),'RO_ventil: ',Tank_neu_fuellen.RO_ventil.value(),'Entleerpumpe: ',Tank_neu_fuellen.Entleerpumpe.value(),'finished: ',Tank_neu_fuellen.finished]
-
 #test
-# T = Tank_neu_fuellen()
+
 # t = Timer()
-# T.start()
 # t.init(mode=Timer.PERIODIC, period=200,callback= lambda x:print(T.mystates()))
-# 
+
 
 
 class EC_Sensor():
     def __init__(self,pin):
         self.sensor = ADC(Pin(pin))
+        self.k1 = 1
+        self.k2 = 2
+        self.k3 = 3
+        self.lookup_table = [
+            (0.00000000000000000,0),
+            (4874.44498922495495,200),
+            (10135.6120464669602,400),
+            (15454.7941955584974,600),
+            (20858.1918005606531,800),
+            (26331.5818066974098,1000),
+            (31790.3744671429922,1200),
+            (37049.6700698092027,1400),
+            (41794.315664132766,1600),
+            (45548.9617878626232,1800),
+            (47648.1191938473567,2000)
+            ]
 
     def get_value(self):
-        def lookup(value, lookup_table):
-            # Finde den Index des nächsten kleineren Werts in der Lookup-Tabelle
-            index = 0
-            while index < len(lookup_table) - 2 and value > lookup_table[index][0]:
-                index += 1
-            # Extrahiere die Werte der nächsten beiden Punkte
-            x0, y0 = lookup_table[index]
-            if index > len(lookup_table)-1:
-                index = len(lookup_table)-2
-            x1, y1 = lookup_table[index + 1]
-            # Lineare Interpolation zwischen den beiden Punkten
-            interpolated_value = y0 + (y1 - y0) * (value - x0) / (x1 - x0)
-            return interpolated_value
         value = self.sensor.read_u16()
-        lookup_table = [
-            (0.00000000000000000,0),
-            (4874.44498922495495,200),
-            (10135.6120464669602,400),
-            (15454.7941955584974,600),
-            (20858.1918005606531,800),
-            (26331.5818066974098,1000),
-            (31790.3744671429922,1200),
-            (37049.6700698092027,1400),
-            (41794.315664132766,1600),
-            (45548.9617878626232,1800),
-            (47648.1191938473567,2000)
-            ]
-       
+        self.k3 = self.k2
+        self.k2 = self.k1
+        self.k1 = value
+        if self.k1 == self.k2:
+            if self.k2==self.k3:
+                print(self.k1, self.k2, self.k3)
+                raise FreezeException()           
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        value = lookup(value,lookup_table)
+        value = self.lookup(value)
         return value
-        
-class EC_pH:
-    '''regelung zur anpassung des EC WErtes und des pH Wertes. simple State Machine'''
-    
-    target_EC = 1000
-    target_PH = 5.8
-    genauigkeit_PH = 1.2
-    genauigkeit_EC = 1000
-    mischzeit = 3000
-    timeout = 1000*60*30
-    
-    pumpe_grow      = Pumpe.Pumpe(11)
-    pumpe_micro     = Pumpe.Pumpe(12)
-    pumpe_flower    = Pumpe.Pumpe(13)
-    pumpe_PH_minus  = Pumpe.Pumpe(14)
-    pumpe_PH_plus   = Pumpe.Pumpe(15)
-    
-    sensor_EC = ADC(Pin(28))
-    filter_EC = cv.convolutionfilter()
-    filter_EC.setValue(sensor_EC.read_u16())
 
-    sensor_PH = ADC(Pin(26))
-    filter_PH = cv.convolutionfilter()
-    filter_PH.setValue(sensor_PH.read_u16())
-    
-    
-    duengen = 0
-    
-    Mischpumpe = Pin(1,Pin.OUT,value=0)
-
-    flower = duengermischung.duengermischung([pumpe_grow,pumpe_micro,pumpe_flower])
-    flower.setMischung([8,16,24])
-    vegetativ = duengermischung.duengermischung([pumpe_grow,pumpe_micro,pumpe_flower])
-    vegetativ.setMischung([18,12,6])
-    current_mischung = vegetativ
-    ph_plus = duengermischung.duengermischung([pumpe_PH_plus])
-    ph_plus.setMischung([4])
-    ph_minus = duengermischung.duengermischung([pumpe_PH_minus])
-    ph_minus.setMischung([4])
-    
-    loop_timer = Timer()
-    misch_timer = Timer()
-    timeout_timer = Timer()
-    
-    finished = 0
-    def test(self):
-        print('pH u16: ' ,EC_pH.convert_PH(EC_pH.sensor_PH,EC_pH.filter_PH),'\tEC u16: ' ,EC_pH.convert_EC(EC_pH.sensor_EC,EC_pH.filter_EC))
- 
-    def start(self):
-        EC_pH.loop_timer.init(period=1000, mode=Timer.PERIODIC, callback=EC_pH.duengen_loop)
-        EC_pH.finished = 0
-        EC_pH.timeout_timer.init(mode=Timer.ONE_SHOT, period=EC_pH.timeout, callback=EC_pH.stop)
-        
-    def is_finished(self):
-        return EC_pH.finished
-        
-    def duengen_loop(timer):   
-        def callback_null(timer):
-            EC_pH.duengen = 0
-        
-        #EC plus
-        if EC_pH.duengen == 0:
-            if EC_pH.convert_EC(pin=EC_pH.sensor_EC, filter=EC_pH.filter_EC) < EC_pH.target_EC - EC_pH.genauigkeit_EC:
-                EC_pH.duengen = 1
-        if EC_pH.duengen == 1:
-            EC_pH.current_mischung.misch()
-            EC_pH.duengen = 2
-        if EC_pH.duengen == 2:
-            if EC_pH.current_mischung.isfinished():
-                EC_pH.duengen = 3
-                EC_pH.misch_timer.init(mode=Timer.ONE_SHOT, period=EC_pH.mischzeit, callback=callback_null)
-        
-        #ph plus
-        if EC_pH.duengen == 0:
-            if EC_pH.convert_EC(EC_pH.sensor_EC,EC_pH.filter_EC) >= EC_pH.target_EC:
-                if EC_pH.convert_PH(pin=EC_pH.sensor_PH, filter=EC_pH.filter_PH) < EC_pH.target_PH - EC_pH.genauigkeit_PH:
-                    EC_pH.duengen = 4
-                    EC_pH.ph_plus.misch()
-
-        if EC_pH.duengen == 4:
-            if EC_pH.ph_plus.isfinished():
-                EC_pH.duengen = 3
-                EC_pH.misch_timer.init(period=EC_pH.mischzeit, mode=Timer.ONE_SHOT, callback=callback_null)
-    
-        #ph minus
-        if EC_pH.duengen == 0:
-            if EC_pH.convert_EC(pin=EC_pH.sensor_EC, filter=EC_pH.filter_EC) >= EC_pH.target_EC:
-                if EC_pH.convert_PH(pin=EC_pH.sensor_PH,filter=EC_pH.filter_PH) > EC_pH.target_PH + EC_pH.genauigkeit_PH:
-                    EC_pH.duengen = 5
-                    EC_pH.ph_minus.misch()
-        if EC_pH.duengen == 5:
-            if EC_pH.ph_minus.isfinished():
-                EC_pH.duengen = 3
-                EC_pH.misch_timer.init(period=EC_pH.mischzeit, mode=Timer.ONE_SHOT, callback=callback_null)
-
-        #isfinished
-        if EC_pH.duengen == 0:
-            if EC_pH.convert_EC(EC_pH.sensor_EC,EC_pH.filter_EC) >= EC_pH.target_EC:
-                if EC_pH.convert_PH(EC_pH.sensor_PH,EC_pH.filter_PH) > EC_pH.target_PH - EC_pH.genauigkeit_PH:
-                    EC_pH.stop(0)
+    def lookup(self, value):
+        lookup_table = self.lookup_table
+        value = min(lookup_table[len(lookup_table)-1][0],max(value,lookup_table[0][0]))
+        # Finde den Index des nächsten kleineren Werts in der Lookup-Tabelle
+        index = 0
+        while index < len(lookup_table) - 2 and value > lookup_table[index][0]:
+            index += 1
+        # Extrahiere die Werte der nächsten beiden Punkte
+        x0, y0 = lookup_table[index]
+        if index > len(lookup_table)-1:
+            index = len(lookup_table)-2
+        x1, y1 = lookup_table[index + 1]
+        # Lineare Interpolation zwischen den beiden Punkten
+        interpolated_value = y0 + (y1 - y0) * (value - x0) / (x1 - x0)
+        return interpolated_value      
   
-    # faktor anpassen !!!!!!!!!!!!!!!!                    
-    def convert_PH(pin,filter):
-        value = filter.filterSignal(pin.read_u16())
-        return value/1024/64*3.3
-    
-    def convert_EC(pin,filter):
-                              
-        def lookup(value, lookup_table):
-            # Finde den Index des nächsten kleineren Werts in der Lookup-Tabelle
-            index = 0
-            while index < len(lookup_table) - 2 and value > lookup_table[index][0]:
-                index += 1
-            # Extrahiere die Werte der nächsten beiden Punkte
-            x0, y0 = lookup_table[index]
-            if index > len(lookup_table)-1:
-                index = len(lookup_table)-2
-            x1, y1 = lookup_table[index + 1]
-            # Lineare Interpolation zwischen den beiden Punkten
-            interpolated_value = y0 + (y1 - y0) * (value - x0) / (x1 - x0)
-            return interpolated_value
-    
-        value = filter.filterSignal(pin.read_u16())
-        lookup_table = [
-            (0.00000000000000000,0),
-            (4874.44498922495495,200),
-            (10135.6120464669602,400),
-            (15454.7941955584974,600),
-            (20858.1918005606531,800),
-            (26331.5818066974098,1000),
-            (31790.3744671429922,1200),
-            (37049.6700698092027,1400),
-            (41794.315664132766,1600),
-            (45548.9617878626232,1800),
-            (47648.1191938473567,2000)
-            ]
-        value = lookup(value,lookup_table)
-        return value
-    
-    def stop(timer):
-        EC_pH.loop_timer.deinit()
-        EC_pH.misch_timer.deinit()
-        EC_pH.Mischpumpe.off()
-        EC_pH.finished = 1
-        print('stop')
-        
-    def mystates(self):
-        return ['duengen :', EC_pH.duengen]
-    
-
 class FreezeException(Exception):
-    pass
+    def __init__(self):
+        print("Sensor Freeze Exception. Pico wird neu gestartet in 5 Sekunden!")
+        time.sleep(5)
+        machine.reset()
+        super().__init__("Sensor Freeze Exception")
+
 
 #test
-# a = EC_pH()
-# a.start()
+
 # from machine import Timer
 # tt = Timer()
 # tt.init(mode=Timer.PERIODIC, period=200,callback= lambda x:print(a.mystates()))
