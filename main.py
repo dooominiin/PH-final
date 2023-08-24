@@ -11,12 +11,12 @@ import convolutionfilter as filt
 import Pumpe
 import duengermischung as dm
 from ds1307 import DS1307
-from EC_PH_Control import EC_pH, EC_Regler
+from EC_PH_Control import EC_Regler
 
 
 if 1:
     
-    ec_regler = EC_Regler(Wasservolumen=8, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28, Mischzeit=45)
+    ec_regler = EC_Regler(Wasservolumen=8, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28, Mischzeit=5)
     ec_regler.run_regler(1950)
 
 if 0:

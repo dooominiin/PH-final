@@ -5,7 +5,7 @@ Created on Fri Apr  7 22:55:13 2023
 @author: domin
 """
 
-
+import uarray
 import time
 import Pumpe
 from machine import Pin, Timer, ADC
@@ -33,7 +33,8 @@ class EC_Regler():
 
     def run_regler(self,Sollwert):
         zähler = 0
-        self.Sollwert = Sollwert
+
+        self.Sollwert = min(2000,max(0,Sollwert))
         while not self.Sollwert_erreicht:
             zähler += 1
             print("Zähler :{}".format(zähler))
@@ -45,21 +46,16 @@ class EC_Regler():
             try:
                 self.Mischpumpe.off()
                 time.sleep(1)            
-                k1 = self.EC_Sensor.get_value()
-                time.sleep(0.5)            
-                k2 = self.EC_Sensor.get_value()
-                time.sleep(0.5)            
-                k3 = self.EC_Sensor.get_value()
+                self.Istwert = self.EC_Sensor.get_value()
                 self.Mischpumpe.on()
 
-                self.Istwert = (k1+k2+k3)/3
             except Exception as e:
                 print(e)
             print("Istwert: {} uS".format(self.Istwert))
 
             self.error_integral += self.error
             self.error = self.Sollwert-self.Istwert
-            self.Sollwert_erreicht = self.error<0 or zähler>=8
+            self.Sollwert_erreicht = self.error<=0 or zähler>=8
 
         self.error_integral = 0
         self.error = 0
@@ -95,14 +91,14 @@ class EC_Sensor():
             ]
 
     def get_value(self):
-        value = self.sensor.read_u16()
-        self.k3 = self.k2
-        self.k2 = self.k1
-        self.k1 = value
-        if self.k1 == self.k2:
-            if self.k2==self.k3:
-                print(self.k1, self.k2, self.k3)
-                raise FreezeException()           
+        values = []
+        for i in range(10):
+            values.append(self.sensor.read_u16())
+            print(values[i])
+            time.sleep(0.1)
+        if all(x == values[0] for x in values):
+            raise FreezeException()
+        value = sum(values) / len(values)
 
         value = self.lookup(value)
         return value
