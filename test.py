@@ -124,7 +124,7 @@ try:
     ist = []
     sensor = []
     relay[4].on()
-    time.sleep(30)
+    time.sleep(1)
     relay[4].off()
     for i in range(20):
         val = sensor_EC.read_u16()   
@@ -134,7 +134,7 @@ try:
         print(ist[i])
         relay[4].on()
         pumpe[4].shot_ml(5)
-        time.sleep(30)
+        time.sleep(3)
         relay[4].off()
     print(ist)
     print(sensor)

@@ -16,14 +16,14 @@ from EC_PH_Control import EC_pH, EC_Regler
 
 if 1:
     
-    ec_regler = EC_Regler(Wasservolumen=9, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28, Mischzeit=20)
-    ec_regler.run_regler(1400)
+    ec_regler = EC_Regler(Wasservolumen=8, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28, Mischzeit=45)
+    ec_regler.run_regler(1950)
 
 if 0:
     # Pumpen Treiber Test
     try:
         pumpe = []
-        pins = [12]#,14,15,11,12]
+        pins = [13,14,15,11,12]
         for pin in pins:
             pumpe.append(Pumpe.Pumpe(pin))
         for Pumpe,pin in zip(pumpe,pins):
