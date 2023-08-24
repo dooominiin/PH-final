@@ -8,8 +8,10 @@ Created on Fri Apr  7 22:55:13 2023
 import uarray
 import time
 import Pumpe
-from machine import Pin, Timer, ADC
+from machine import Pin, Timer, ADC,SPI
 import machine
+import os
+import sdcard
 
 class EC_Regler():
     def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, EC_Sensor_pin,Mischzeit):
@@ -73,9 +75,6 @@ class EC_Regler():
 class EC_Sensor():
     def __init__(self,pin):
         self.sensor = ADC(Pin(pin))
-        self.k1 = 1
-        self.k2 = 2
-        self.k3 = 3
         self.lookup_table = [
             (0.00000000000000000,0),
             (4874.44498922495495,200),
@@ -91,17 +90,18 @@ class EC_Sensor():
             ]
 
     def get_value(self):
+        return self.lookup(self.get_value_u16())
+         
+    
+    def get_value_u16(self):
         values = []
         for i in range(10):
             values.append(self.sensor.read_u16())
-            print(values[i])
             time.sleep(0.1)
         if all(x == values[0] for x in values):
             raise FreezeException()
-        value = sum(values) / len(values)
+        return sum(values) / len(values)
 
-        value = self.lookup(value)
-        return value
 
     def lookup(self, value):
         lookup_table = self.lookup_table
