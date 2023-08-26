@@ -89,13 +89,6 @@ class my_outputs:
             "Pumpe_4" : self.pumpe_4, # type: ignore
             "Pumpe_5" : self.pumpe_5 # type: ignore
         }
-        
-        try:
-            
-            print(my_dict.keys())
-            
-        except Exception as e:
-            print(e)
         return my_dict
     
 class my_queue:
