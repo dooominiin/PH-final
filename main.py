@@ -11,9 +11,21 @@ import convolutionfilter as filt
 import Pumpe
 import duengermischung as dm
 from ds1307 import DS1307
-from EC_PH_Control import EC_Regler, EC_Sensor
+from EC_PH_Control import EC_Regler
+from input_output import my_inputs, my_outputs
+
+
+
+i = my_inputs(update_freq=1)
+o = my_outputs()
 
 if 1:
+    
+    ec_regler = EC_Regler(Wasservolumen=0.1, Düngerkonztentration= 0.1, Mischpumpe=o.relay_AC_PWM, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=5)
+    ec_regler.run_regler(1950)
+
+
+if 0:
     #sdcard karten test    
     try:
         sd = sdcard.SDCard(SPI(0, 40_000_000, sck=Pin(18), mosi=Pin(19), miso=Pin(16)), Pin(17))
@@ -28,8 +40,7 @@ if 1:
         print("sd karte Test fehlgeschlagen")
         print(e)
   
-
-if 1:
+if 0:
     
     try:
         #os.mount(sd, '/sd')
@@ -59,11 +70,6 @@ if 1:
                 print(e)
 
 if 0:
-    
-    ec_regler = EC_Regler(Wasservolumen=8, Düngerkonztentration= 0.1, Mischpumpe=3, Düngerpumpe=12, EC_Sensor_pin=28, Mischzeit=1)
-    ec_regler.run_regler(1950)
-
-if 0:
     # Pumpen Treiber Test
     try:
         pumpe = []
@@ -79,3 +85,5 @@ if 0:
         print("Pumpen Treiber Test fehlgeschlagen")
         print(e)
 
+while True:
+    pass

@@ -9,7 +9,9 @@ class Pumpe(object):
         self.pumpe.duty_u16(0)
         self.isfinished = 1
 
-    
+    def value(self):
+        return 1 - self.isfinished
+
     def shot(self,value):
         def off(timer):
             self.pumpe.duty_u16(0)
