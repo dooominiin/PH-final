@@ -25,11 +25,11 @@ log = datalogger(i,o,log_periode=3)
 
 if 1:
     
-    ec_regler = EC_Regler(Wasservolumen=120, Düngerkonztentration= 0.1, Mischpumpe=o.relay_AC_PWM, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=60)
-    for sp in range(100,1500,100):
+    ec_regler = EC_Regler(Wasservolumen=120, Düngerkonztentration= 0.1, Mischpumpe=o.relay_AC_PWM, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=300)
+    for sp in range(1200,1900,200):
         print(sp)    
         ec_regler.run_regler(sp)
-        time.sleep(120)
+        time.sleep(600)
 
 
 if 0:
