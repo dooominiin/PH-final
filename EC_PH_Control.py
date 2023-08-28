@@ -6,7 +6,7 @@ Created on Fri Apr  7 22:55:13 2023
 """
 import time
 
-class EC_Regler():
+class EC_Regler:
     def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, Inputs, Mischzeit):
         self.Wasservolumen = Wasservolumen
         self.Düngerkonzentration = Düngerkonztentration

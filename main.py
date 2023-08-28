@@ -12,7 +12,7 @@ import Pumpe
 import duengermischung as dm
 from ds1307 import DS1307
 from EC_PH_Control import EC_Regler
-from input_output import my_inputs, my_outputs
+from HAL import my_inputs, my_outputs
 from datalogger import datalogger
 
 

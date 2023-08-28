@@ -1,24 +1,14 @@
-import convolutionfilter as cv
-from machine import Pin, ADC, Timer, PWM, I2C, SPI
-from collections import namedtuple
-import machine
-import random
-import sdcard
-import utime
-import time
-import array
+from machine import Pin, ADC, Timer, PWM, I2C
 import sht31
-import os
-import convolutionfilter as filt
 import Pumpe
-import duengermischung as dm
 from ds1307 import DS1307
 
+# Hardware Abstraction Layer
 class my_inputs:
     def __init__(self,update_freq):
         self.sensor_EC = sensor_EC(10)
         self.sensor_TEMP_HUMI = sensor_TEMP_HUMI()
-        self.rtc = myRTC()
+        self.rtc = my_RTC()
     
         self.time = (1,1,1,1,1)
         self.temp = 0
@@ -38,7 +28,6 @@ class my_inputs:
     
     def get_inputs(self):
         # Definition des benannten Tupels
-        my_inputs = namedtuple("my_inputs", ["Temperatur", "Humidity", "EC","datetime"])
         my_dict = {
             "Temperatur" : self.temp, # type: ignore
             "Humidity" : self.humi, # type: ignore
@@ -205,8 +194,7 @@ class my_pwm:
     def off(self):
         self.pwm.duty_u16(0)
         
-
-class myRTC:
+class my_RTC:
     def __init__(self):
         try:
             i2c_rtc = I2C(0,scl = Pin(1),sda = Pin(0),freq = 100000)
@@ -227,26 +215,3 @@ class myRTC:
             self.__init__()
             return (0,0,0,0,0,0)
 
-
-if 0:
-    output = my_outputs()
-    input = my_inputs(update_freq=2)
-    while True:
-        time.sleep(2.5)
-        i = input.get_inputs()
-        o = output.get_outputs()
-        
-        try:
-            for key,vals in o.items():
-                print(key + " : {}".format(vals.value()))
-        except Exception as e:
-            print(e)
-        pass
-
-
-if 0:
-    t = Timer()
-    t.init(mode=Timer.ONE_SHOT, period=1,callback= lambda x:print(122))
-
-    while True:
-        time.sleep(0.1)
