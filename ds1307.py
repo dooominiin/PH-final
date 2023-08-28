@@ -12,18 +12,7 @@ RAM_REG      = const(8) # 0x08-0x3F
 class DS1307(object):
     """Driver for the DS1307 RTC."""
 
-    def set_dayly_timer(self,weckzeit,callback):
-        self.weckzeit = weckzeit
-        self.timer = Timer()
-        flag = False
-        while True:
-            if flag:
-                callback()
-                flag = False
-        def check_time(timer):
-            if all(self.weckzeit == self.datetime[4:7]):
-                flag = True
-        self.timer.init(callback=check_time)
+  
 
     def __init__(self, i2c, addr=0x68):
         self.i2c = i2c

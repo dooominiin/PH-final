@@ -43,7 +43,8 @@ class datalogger:
                 try:
                     with open("sd/" + self.filename, "a") as file:
                         file.write(values + "\n")
-                        print("daten geloggt")
+                        print("daten geloggt {}".format(self.log_data["datetime"]))
+
                 except Exception as e:
                     print(e)
                     self.remount()
