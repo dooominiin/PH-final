@@ -41,7 +41,7 @@ class DS1307(object):
         """Get or set datetime"""
         if datetime is None:
             buf = self.i2c.readfrom_mem(self.addr, DATETIME_REG, 7)
-            return (
+            datetime = (
                 self._bcd2dec(buf[6]) + 2000, # year
                 self._bcd2dec(buf[5]), # month
                 self._bcd2dec(buf[4]), # day
@@ -51,6 +51,7 @@ class DS1307(object):
                 self._bcd2dec(buf[0] & 0x7F), # second
                 0 # subseconds
             )
+            return
         buf = bytearray(7)
         buf[0] = self._dec2bcd(datetime[6]) & 0x7F # second, msb = CH, 1=halt, 0=go
         buf[1] = self._dec2bcd(datetime[5]) # minute
