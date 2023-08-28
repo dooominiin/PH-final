@@ -1,4 +1,5 @@
 from micropython import const
+from machine import Timer
 
 DATETIME_REG = const(0) # 0x00-0x06
 CHIP_HALT    = const(128)
@@ -10,6 +11,20 @@ RAM_REG      = const(8) # 0x08-0x3F
 
 class DS1307(object):
     """Driver for the DS1307 RTC."""
+
+    def set_dayly_timer(self,weckzeit,callback):
+        self.weckzeit = weckzeit
+        self.timer = Timer()
+        flag = False
+        while True:
+            if flag:
+                callback()
+                flag = False
+        def check_time(timer):
+            if all(self.weckzeit == self.datetime[4:7]):
+                flag = True
+        self.timer.init(callback=check_time)
+
     def __init__(self, i2c, addr=0x68):
         self.i2c = i2c
         self.addr = addr
@@ -51,7 +66,7 @@ class DS1307(object):
                 self._bcd2dec(buf[0] & 0x7F), # second
                 0 # subseconds
             )
-            return
+            return datetime
         buf = bytearray(7)
         buf[0] = self._dec2bcd(datetime[6]) & 0x7F # second, msb = CH, 1=halt, 0=go
         buf[1] = self._dec2bcd(datetime[5]) # minute
