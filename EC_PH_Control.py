@@ -37,15 +37,10 @@ class EC_Regler:
             value = (self.kp * self.error + self.ki * self.error_integral) * self.Wasservolumen/self.Düngerkonzentration/1400
             print("dünger : {}ml, error: {}".format(value,self.error))
             self.Düngerpumpe.shot_ml(value)
+            print("Am mischen für {}s".format(self.Mischzeit))
             time.sleep(self.Mischzeit)
-            try:
-                self.Mischpumpe.off()
-                time.sleep(1)  
-                self.Istwert = self.Inputs.ec
-                self.Mischpumpe.on()
+            self.Istwert = self.Inputs.ec
 
-            except Exception as e:
-                print(e)
             print("Istwert: {} uS".format(self.Istwert))
 
             self.error_integral += self.error
