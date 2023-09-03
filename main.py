@@ -9,17 +9,16 @@ i = my_inputs(update_freq=1)
 o = my_outputs()
 log = datalogger(i,o,log_periode=1)
 
-o.relay__AC_1.off()
-o.relay__AC_2.off()
-o.relay__AC_3.off()
-o.relay_AC_PWM.off()
+lampe = o.relay__AC_1
+lüftung = o.relay__AC_2
+heizung = o.relay__AC_3
+umwälzpumpe = o.relay__AC_4
 
-s = [
-    o.relay__AC_1,
-    o.relay__AC_2,
-    o.relay__AC_3,
-    o.relay_AC_PWM
-]
+lampe.on()
+lüftung.on()
+heizung.off()
+umwälzpumpe.off()
+
 
 
 def toggle_random_object(objects):
@@ -32,8 +31,8 @@ def toggle_random_object(objects):
         print(f"{object_to_toggle}on()")
 
 # Hier rufst du den Timer auf und gibst die 'toggle_random_object' Funktion als Callback an, die alle 3 Stunden aufgerufen wird.
-t = Timer()
-t.init(mode=Timer.PERIODIC, period=3 * 60 * 60 * 1000, callback=lambda t: toggle_random_object(s))
+#t = Timer()
+#t.init(mode=Timer.PERIODIC, period=3 * 60 * 60 * 1000, callback=lambda t: toggle_random_object(s))
 
 
 
@@ -55,5 +54,13 @@ if 0:
         time.sleep(600)
 
 while True:
+    print("temp: {}".format(i.temp))
+    if i.temp < 26:
+        heizung.on()
+        print("heizung on")
+    if i.temp > 27:
+        heizung.off()
+        print("heizung off")
+    time.sleep(1)
     pass
 
