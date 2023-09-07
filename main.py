@@ -46,21 +46,25 @@ except Exception as e:
     print(e)
 
 
+ec_regler = EC_Regler(Wasservolumen=50, Düngerkonztentration= 0.1, Mischpumpe=o.relay__AC_4, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=600)
 if 0:
-    ec_regler = EC_Regler(Wasservolumen=120, Düngerkonztentration= 0.1, Mischpumpe=o.relay_AC_PWM, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=600)
     for sp in (1600,1700,1800,1900,1950):
         print(sp)    
         ec_regler.run_regler(sp)
         time.sleep(600)
 
+if 1:    
+    # ec regeln
+    print(1)
+    timer_ec = Timer()
+    timer_ec.init(mode=Timer.PERIODIC, period=3 * 60 * 60 * 1000, callback=ec_regler.run_regler(1000))
+    print(2)
+
 while True:
+    print("ec: {}".format(i.ec))
     print("temp: {}".format(i.temp))
-    if i.temp < 26:
-        heizung.on()
-        print("heizung on")
-    if i.temp > 27:
-        heizung.off()
-        print("heizung off")
+    
+    
     time.sleep(1)
     pass
 
