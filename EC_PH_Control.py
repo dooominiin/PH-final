@@ -18,25 +18,25 @@ class Temperatur_Regler:
         self.t2 = Timer()
         self.t3 = Timer()
 
-        timestep1 = 1
-        timestep2 = 3600
+        timestep1 = 1 # abtastrate für den integrator
+        timestep2 = 3600 # Schaltperiode in Sekunden für die Heizung
         
         self.heizung = outputs.relay__AC_3
         self.inputs = inputs
         
-        self.t1.init(mode=Timer.PERIODIC, period=timestep1 * 1000, callback=update_integrator)
-        self.t2.init(mode=Timer.PERIODIC, period=timestep2 * 1000, callback=update_heizung)
-        
-        def update_integrator():
+        def update_integrator(timer):
             # Calculate the control signal
             error = (setpoint-inputs.temp)
             self.integrator += error * self.ki * timestep1 / timestep2
             self.output = max(0,min(1,self.kp * error + self.integrator))
 
-        def update_heizung(self):
+        def update_heizung(timer):
             self.heizung.on()
             self.t3.init(mode=Timer.ONE_SHOT, period=self.output* timestep2 * 1000, callback=self.heizung.off())
 
+        self.t1.init(mode=Timer.PERIODIC, period=timestep1 * 1000, callback=update_integrator)
+        self.t2.init(mode=Timer.PERIODIC, period=timestep2 * 1000, callback=update_heizung)
+        
 
 class EC_Regler:
     def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, Inputs, Mischzeit):
