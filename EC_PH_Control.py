@@ -5,6 +5,38 @@ Created on Fri Apr  7 22:55:13 2023
 @author: domin
 """
 import time
+from machine import Timer
+
+class Temperatur_Regler:
+    
+    def __init__(self, setpoint, kp, ki, inputs, outputs):
+        self.kp = kp  # Proportional gain
+        self.ki = ki  # Integral gain
+        self.integrator = 0  # Initialize the integrator
+        self.output = 0  # Initialize the output
+        self.t1 = Timer()
+        self.t2 = Timer()
+        self.t3 = Timer()
+
+        timestep1 = 1
+        timestep2 = 3600
+        
+        self.heizung = outputs.relay__AC_3
+        self.inputs = inputs
+        
+        self.t1.init(mode=Timer.PERIODIC, period=timestep1 * 1000, callback=update_integrator)
+        self.t2.init(mode=Timer.PERIODIC, period=timestep2 * 1000, callback=update_heizung)
+        
+        def update_integrator():
+            # Calculate the control signal
+            error = (setpoint-inputs.temp)
+            self.integrator += error * self.ki * timestep1 / timestep2
+            self.output = max(0,min(1,self.kp * error + self.integrator))
+
+        def update_heizung(self):
+            self.heizung.on()
+            self.t3.init(mode=Timer.ONE_SHOT, period=self.output* timestep2 * 1000, callback=self.heizung.off())
+
 
 class EC_Regler:
     def __init__(self,Wasservolumen, Düngerkonztentration, Mischpumpe, Düngerpumpe, Inputs, Mischzeit):

@@ -205,6 +205,23 @@ class my_RTC:
             print("RTC verbinden fehlgeschlagen")
             print(e)
 
+    def set_dayly_timer(self,weckzeit,callback,tag_des_monats = None):
+        self.weckzeit = weckzeit
+        self.timer = Timer()
+        self.tag_des_monats = tag_des_monats
+        self.flag = False
+        def check_time(timer):
+            if (self.weckzeit == self.rtc.datetime()[4:7]):
+                self.flag = True
+                if self.tag_des_monats:
+                    self.flag = self.tag_des_monats==self.rtc.datetime()[2]
+            if self.flag:
+                callback()
+                self.flag = False
+
+        self.timer.init(mode=Timer.PERIODIC, period=1000,callback=check_time)
+
+
     def get_time(self):
         try:
             datetime = self.rtc.datetime()
