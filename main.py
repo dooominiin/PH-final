@@ -19,7 +19,7 @@ lüftung.on()
 heizung.off()
 umwälzpumpe.off()
 
-T = Temperatur_Regler(setpoint=28,kp=0.01,ki=0.01,inputs=i,outputs=o)
+T = Temperatur_Regler(setpoint=28,kp=0.01,ki=0.01,inputs=i,outputs=o, period_integrator=2,period_heizung=100)
 
 
 
@@ -60,12 +60,12 @@ if 1:
     # ec regeln
     print(1)
     timer_ec = Timer()
-    timer_ec.init(mode=Timer.PERIODIC, period=3 * 60 * 60 * 1000, callback=ec_regler.run_regler(1000))
+    timer_ec.init(mode=Timer.PERIODIC, period=3 * 60 * 60 * 1000, callback=lambda x: ec_regler.run_regler(1000))
     print(2)
 
 while True:
-    print("ec: {}".format(i.ec))
-    print("temp: {}".format(i.temp))
+    #print("ec: {}".format(i.ec))
+    #print("temp: {}".format(i.temp))
     
     
     time.sleep(1)
