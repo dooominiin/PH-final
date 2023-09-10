@@ -95,7 +95,7 @@ class my_queue:
             class SensorFreezeException(Exception): pass
             #raise SensorFreezeException("Sensor regiert nicht mehr!\n{}".format(self.queue))
             #machine.reset()
-            print("Sensor regiert nicht mehr!\n{}".format(self.queue))
+            #print("Sensor regiert nicht mehr!\n{}".format(self.queue))
 
     def filter(self,value):
         self.append(value)
@@ -106,11 +106,12 @@ class sensor_EC:
         try:
             self.sensor_EC = ADC(Pin(28))
             value = self.sensor_EC.read_u16()
-            print("EC sensor erfolgreich verbunden mit {} EC u16.\n".format(value))
+            #print("EC sensor erfolgreich verbunden mit {} EC u16.\n".format(value))
             self.q = my_queue(q_length,value)
         except Exception as e:
-            print("EC sensor verbinden fehlgeschlagen")
-            print(e)   
+            #print("EC sensor verbinden fehlgeschlagen")
+            #print(e)  
+            pass 
 
     def lookup(self, value):
         lookup_table = [
@@ -147,7 +148,7 @@ class sensor_EC:
             self.q.check_for_freeze()
             return value
         except Exception as e:
-            print(e)
+            #print(e)
             self.__init__(self.q.length)
             return 0
 
@@ -163,16 +164,17 @@ class sensor_TEMP_HUMI:
             data = self.sensor_temp_humi.get_temp_humi()
             temperatur = data[0]
             luftfeuchtigkeit = data[1]
-            print("Temp/Humi sensor erfolgreich verbunden mit T: {} Humi: {} EC.\n".format(temperatur,luftfeuchtigkeit))
+            #print("Temp/Humi sensor erfolgreich verbunden mit T: {} Humi: {} EC.\n".format(temperatur,luftfeuchtigkeit))
         except Exception as e:
-            print("Temp/Humi sensor verbinden fehlgeschlagen")
-            print(e)
+            #print("Temp/Humi sensor verbinden fehlgeschlagen")
+            #print(e)
+            pass
 
     def get_temp_humi(self):
         try:
             return self.sensor_temp_humi.get_temp_humi()
         except Exception as e:
-            print(e)
+            #print(e)
             self.__init__()
             return (0,0)
 
@@ -200,10 +202,11 @@ class my_RTC:
             i2c_rtc = I2C(0,scl = Pin(1),sda = Pin(0),freq = 100000)
             self.rtc = DS1307(i2c_rtc)
             # rtc.set_Time(rtc) # nur auskommentieren, um Zeit neu zu setzen!
-            print("RTC erfolgreich verbunden mit {}.".format(self.rtc.datetime()))
+            #print("RTC erfolgreich verbunden mit {}.".format(self.rtc.datetime()))
         except Exception as e:
-            print("RTC verbinden fehlgeschlagen")
-            print(e)
+            #print("RTC verbinden fehlgeschlagen")
+            #print(e)
+            pass
 
     def set_dayly_timer(self,weckzeit,callback,tag_des_monats = None):
         self.weckzeit = weckzeit
@@ -228,7 +231,7 @@ class my_RTC:
             datetime = datetime[0:3] + datetime[4:7]
             return datetime
         except Exception as e:
-            print(e)
+            #print(e)
             self.__init__()
             return (0,0,0,0,0,0)
 

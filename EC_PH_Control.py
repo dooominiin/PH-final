@@ -59,10 +59,67 @@ class EC_Regler:
         self.kp = 0.8
         self.ki = 0.05
         self.Sollwert_erreicht = False
-    
+        self.state = "warten"
+        self.timer_running = False
+        self.zähler = 0
+        self.my_timer = Timer(mode=Timer.PERIODIC,period=1000, callback=lambda x: self.run())
+
+    def run(self):
+        if self.state == "mischen":
+            print("Mischen...")
+            self.Mischpumpe.on()
+            # Hier kannst du den Code für den Zustand "mischen" einfügen
+            if not self.timer_running: 
+                t = Timer(mode=Timer.ONE_SHOT,period=1000*self.Mischzeit,callback=lambda x: self.transition("messen"))
+                print("Am mischen für {}s".format(self.Mischzeit))
+            self.timer_running = True        
+        elif self.state == "messen":
+            print("Messen...")
+            # Hier kannst du den Code für den Zustand "messen" einfügen
+            self.error_integral += self.error
+            self.error = self.Sollwert-self.Inputs.ec
+            
+            
+            if self.error<=0 or self.zähler>=8:
+                self.state = "warten"
+                print("EC Sollwert erreicht")
+            else:
+                self.state = "düngen"
+        elif self.state == "düngen":
+            print("Düngen...")
+            # Hier kannst du den Code für den Zustand "düngen" einfügen
+            self.zähler += 1
+            print("Zähler :{}".format(self.zähler))
+            value = (self.kp * self.error + self.ki * self.error_integral) * self.Wasservolumen/self.Düngerkonzentration/1400
+            self.Düngerpumpe.shot_ml(value)
+            print("dünger : {}ml, error: {}".format(value,self.error))
+            self.state = "mischen"
+        elif self.state == "warten":
+            print("Warten...")
+            # Hier kannst du den Code für den Zustand "warten" einfügen
+            self.zähler = 0
+
+    def transition(self, state):
+        self.state = state
+        self.timer_running = False
+
+    def ec_regeln(self, sollwert):
+        self.Sollwert = sollwert
+        if self.state == "warten":
+            self.transition("mischen")
+        else:
+            pass
+            #print("Regler nicht bereit! ist am {}".format(self.state))
+
+
+
+
+
+
+
     def run_regler(self,sollwert):
         zähler = 0
-
+        print("sfdasdsf")
         self.Sollwert = min(1950,max(0,sollwert))
         while not self.Sollwert_erreicht:
             zähler += 1
@@ -81,15 +138,26 @@ class EC_Regler:
             self.error = self.Sollwert-self.Istwert
             self.Sollwert_erreicht = self.error<=0 or zähler>=8
 
-            
-    
-    def set_k(self,kp,ki):
-        self.kp = kp
-        self.ki = ki
-
-
         self.error_integral = 0
         self.error = 0
         self.Sollwert_erreicht = False
         self.Mischpumpe.off()
-        
+
+
+class michi:
+    def __init__(self):
+        self.test = 1
+        self.t = Timer()
+        self.t.init(mode=Timer.ONE_SHOT,period=1000,callback=lambda x: self.testfunktion())
+            
+    def testfunktion(self):
+        print(23)
+        print(554)
+
+if __name__ == "__main__":
+    
+    r = EC_Regler(1,1,1,1,1,4)
+
+    while True:
+        time.sleep(0.1)
+        r.run()

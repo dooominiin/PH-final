@@ -23,8 +23,7 @@ class Pumpe(object):
 
     def shot_ml(self,value):
         self.shot(value/7.35*10)
-        while not self.isfinished:
-            time.sleep(0.1)
+        
 
     def deinit(self):
         self.pumpe.duty_u16(0)
