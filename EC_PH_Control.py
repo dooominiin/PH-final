@@ -65,6 +65,7 @@ class EC_Regler:
         self.my_timer = Timer(mode=Timer.PERIODIC,period=1000, callback=lambda x: self.run())
 
     def run(self):
+        
         if self.state == "mischen":
             print("Mischen...")
             self.Mischpumpe.on()
@@ -72,7 +73,8 @@ class EC_Regler:
             if not self.timer_running: 
                 t = Timer(mode=Timer.ONE_SHOT,period=1000*self.Mischzeit,callback=lambda x: self.transition("messen"))
                 print("Am mischen für {}s".format(self.Mischzeit))
-            self.timer_running = True        
+                self.timer_running = True        
+        
         elif self.state == "messen":
             print("Messen...")
             # Hier kannst du den Code für den Zustand "messen" einfügen
@@ -85,6 +87,7 @@ class EC_Regler:
                 print("EC Sollwert erreicht")
             else:
                 self.state = "düngen"
+        
         elif self.state == "düngen":
             print("Düngen...")
             # Hier kannst du den Code für den Zustand "düngen" einfügen
@@ -94,8 +97,9 @@ class EC_Regler:
             self.Düngerpumpe.shot_ml(value)
             print("dünger : {}ml, error: {}".format(value,self.error))
             self.state = "mischen"
+        
         elif self.state == "warten":
-            print("Warten...")
+            #print("Warten...")
             # Hier kannst du den Code für den Zustand "warten" einfügen
             self.zähler = 0
 

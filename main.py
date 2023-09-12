@@ -7,7 +7,7 @@ from machine import Timer
 
 i = my_inputs(update_freq=1)
 o = my_outputs()
-#log = datalogger(i,o,log_periode=1)
+log = datalogger(i,o,log_periode=1)
 
 lampe = o.relay__AC_1
 lüftung = o.relay__AC_2
@@ -19,18 +19,13 @@ lüftung.on()
 heizung.off()
 umwälzpumpe.off()
 
-T = Temperatur_Regler(setpoint=28,kp=0.01,ki=0.01,inputs=i,outputs=o, period_integrator=2,period_heizung=100)
-
-
-
-
-
-ec_regler = EC_Regler(Wasservolumen=100, Düngerkonztentration= 0.1, Mischpumpe=o.relay__AC_4, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=300)
-#ec_regler.ec_regeln(500)
+T = Temperatur_Regler(setpoint=26,kp=0.01,ki=0.01,inputs=i,outputs=o, period_integrator=1,period_heizung=300)
+#ec_regler = EC_Regler(Wasservolumen=100, Düngerkonztentration= 0.1, Mischpumpe=o.relay__AC_4, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=5)
+#ec_regler.ec_regeln(700)
 
 while True:
-    print("ec: {}".format(i.ec))
+    print("temp: {}".format(i.temp))
     
-    time.sleep(0.5)
+    time.sleep(1)
     pass
 
