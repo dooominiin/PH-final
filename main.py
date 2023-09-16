@@ -19,12 +19,12 @@ lüftung.on()
 heizung.off()
 umwälzpumpe.off()
 
-T = Temperatur_Regler(setpoint=26,kp=0.01,ki=0.01,inputs=i,outputs=o, period_integrator=1,period_heizung=300)
-#ec_regler = EC_Regler(Wasservolumen=100, Düngerkonztentration= 0.1, Mischpumpe=o.relay__AC_4, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=5)
-#ec_regler.ec_regeln(700)
+T = Temperatur_Regler(setpoint=24.5,kp=0.1,ki=0.03,inputs=i,outputs=o, period_integrator=1,period_heizung=1800)
+#ec_regler = EC_Regler(Wasservolumen=140, Düngerkonztentration= 0.1, Mischpumpe=o.relay__AC_4, Düngerpumpe=o.pumpe_5, Inputs=i, Mischzeit=5)
+#ec_regler.ec_regeln(1000)
 
 while True:
-    print("temp: {}".format(i.temp))
+    #print("temp: {}".format(i.temp))
     
     time.sleep(1)
     pass

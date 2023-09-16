@@ -30,14 +30,14 @@ class Temperatur_Regler:
             self.integrator += error * self.ki * timestep1 / timestep2
             self.integrator = max(-0.8,min(1,self.integrator))
             self.output = max(0,min(0.8,self.kp * error + self.integrator))
-            print("update integrator\terror: {}\tint: {}\tout: {}".format(error, self.integrator,self.output))
+            #print("update integrator\terror: {}\tint: {}\tout: {}".format(error, self.integrator,self.output))
 
         def heizung_off(timer):
             self.heizung.off()
-            print("\nHeizung off\n")
+            #print("\nHeizung off\n")
         def update_heizung(timer):
             self.heizung.on()
-            print("\nheizung an für {}s\n".format(self.output* timestep2))
+            #print("\nheizung an für {}s\n".format(self.output* timestep2))
             self.t3.init(mode=Timer.ONE_SHOT, period=int(self.output* timestep2 * 1000), callback=heizung_off)
             
         self.t1.init(mode=Timer.PERIODIC, period=timestep1 * 1000, callback=update_integrator)
@@ -67,14 +67,17 @@ class EC_Regler:
     def run(self):
         
         if self.state == "mischen":
-            print("Mischen...")
-            self.Mischpumpe.on()
             # Hier kannst du den Code für den Zustand "mischen" einfügen
             if not self.timer_running: 
-                t = Timer(mode=Timer.ONE_SHOT,period=1000*self.Mischzeit,callback=lambda x: self.transition("messen"))
-                print("Am mischen für {}s".format(self.Mischzeit))
+                self.mischtimer = 0
+                print("Timer start")
                 self.timer_running = True        
-        
+            print("timer_running: {}    Am mischen für {}s".format(self.timer_running,self.Mischzeit-self.mischtimer),end='\r')
+            self.Mischpumpe.on()
+            self.mischtimer += 1
+            if self.mischtimer>=self.Mischzeit:
+                self.state = "messen"
+
         elif self.state == "messen":
             print("Messen...")
             # Hier kannst du den Code für den Zustand "messen" einfügen
@@ -106,7 +109,8 @@ class EC_Regler:
     def transition(self, state):
         self.state = state
         self.timer_running = False
-
+        print("Transition zu {}".format(state))
+    
     def ec_regeln(self, sollwert):
         self.Sollwert = sollwert
         if self.state == "warten":

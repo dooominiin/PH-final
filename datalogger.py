@@ -1,5 +1,6 @@
 import os 
 import sdcard
+import time
 
 from machine import Pin, SPI, Timer
 
@@ -41,10 +42,11 @@ class datalogger:
             values = ";".join(str(data) for data in self.log_data.values())
             if file_exists:
                 try:
+                    t = time.ticks_ms()
                     with open("sd/" + self.filename, "a") as file:
                         file.write(values + "\n")
                         #print("daten geloggt {}".format(self.log_data["datetime"]))
-
+                    print("speichern benötigt {} s".format(1000*(time.ticks_ms()-t)))
                 except Exception as e:
                     print(e)
                     self.remount()
