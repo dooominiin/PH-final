@@ -28,18 +28,19 @@ class Temperatur_Regler:
             # Calculate the control signal
             error = (setpoint-inputs.temp)
             self.integrator += error * self.ki * timestep1 / timestep2
-            self.integrator = max(-0.8,min(1,self.integrator))
-            self.output = max(0,min(0.8,self.kp * error + self.integrator))
-            #print("update integrator\terror: {}\tint: {}\tout: {}".format(error, self.integrator,self.output))
+            self.integrator = max(-0.9,min(1,self.integrator))
+            self.output = max(0.001,min(0.9,self.kp * error + self.integrator))
+            print("update integrator\terror: {}\tint: {}\tout: {}".format(error, self.integrator,self.output))
 
         def heizung_off(timer):
+            time.sleep(0.05)
             self.heizung.off()
-            #print("\nHeizung off\n")
+            print("\nHeizung off\n")
         def update_heizung(timer):
             self.heizung.on()
-            #print("\nheizung an für {}s\n".format(self.output* timestep2))
+            print("\nheizung an für {}s\n".format(self.output* timestep2))
             self.t3.init(mode=Timer.ONE_SHOT, period=int(self.output* timestep2 * 1000), callback=heizung_off)
-            
+            outputs.temperatur_regler_output.set_value(self.output)
         self.t1.init(mode=Timer.PERIODIC, period=timestep1 * 1000, callback=update_integrator)
         self.t2.init(mode=Timer.PERIODIC, period=timestep2 * 1000, callback=update_heizung)
         

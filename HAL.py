@@ -45,6 +45,17 @@ class my_outputs:
         self.relay__AC_4 = (Pin(22,Pin.OUT))
         self.relay_AC_PWM = my_pwm(3,freq=8,duty_u16=0)
 
+
+        class tro:
+            def __init__(self):
+                self.v = 0
+            def value(self):
+                return self.v
+            def set_value(self,val):
+                self.v = val
+                print("value aktualisiert")
+
+        self.temperatur_regler_output = tro()
         self.pumpe_1 = Pumpe.Pumpe(13)
         self.pumpe_2 = Pumpe.Pumpe(14)
         self.pumpe_3 = Pumpe.Pumpe(15)
@@ -76,7 +87,8 @@ class my_outputs:
             "Pumpe_2" : self.pumpe_2, # type: ignore
             "Pumpe_3" : self.pumpe_3, # type: ignore
             "Pumpe_4" : self.pumpe_4, # type: ignore
-            "Pumpe_5" : self.pumpe_5 # type: ignore
+            "Pumpe_5" : self.pumpe_5, # type: ignore
+            "T_Regler_Output" : self.temperatur_regler_output # type: ignore
         }
         return my_dict
     
