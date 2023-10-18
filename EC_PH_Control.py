@@ -9,7 +9,7 @@ from machine import Timer
 
 class Temperatur_Regler:
     
-    def __init__(self, setpoint, kp, ki, inputs, outputs, period_integrator, period_heizung):
+    def __init__(self, setpoint, kp, ki, inputs, outputs,heizung, period_integrator, period_heizung):
         self.kp = kp  # Proportional gain
         self.ki = ki  # Integral gain
         self.integrator = 0  # Initialize the integrator
@@ -21,7 +21,7 @@ class Temperatur_Regler:
         timestep1 = period_integrator # abtastrate für den integrator
         timestep2 = period_heizung # Schaltperiode in Sekunden für die Heizung
         
-        self.heizung = outputs.relay__AC_3
+        self.heizung = heizung
         self.inputs = inputs
         
         def update_integrator(timer):
